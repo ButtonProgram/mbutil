@@ -58,6 +58,7 @@ Python installation (requires easy_install)
                             grids are not used as JSONP, you can
                             remove callbacks specifying --grid_callback=""
       --do_compression      Do mbtiles compression
+      --decompress_tiles    Decompress gzipped tiles (presumably PBF)
       --silent              Dictate whether the operations should run silently
 
 

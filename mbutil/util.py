@@ -9,7 +9,7 @@
 # for additional reference on schema see:
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
 
-import sqlite3, sys, logging, time, os, json, zlib, re
+import sqlite3, sys, logging, time, os, json, zlib, re, gzip
 
 logger = logging.getLogger(__name__)
 
@@ -310,9 +310,7 @@ def mbtiles_to_disk(mbtiles_file, directory_path, **kwargs):
     tiles = con.execute('select zoom_level, tile_column, tile_row, tile_data from tiles;')
     t = tiles.fetchone()
     while t:
-        z = t[0]
-        x = t[1]
-        y = t[2]
+        z, x, y, data = t
         if kwargs.get('scheme') == 'xyz':
             y = flip_y(z,y)
             if not silent:
@@ -334,9 +332,11 @@ def mbtiles_to_disk(mbtiles_file, directory_path, **kwargs):
             tile = os.path.join(tile_dir,'%03d.%s' % (int(y) % 1000, kwargs.get('format', 'png')))
         else:
             tile = os.path.join(tile_dir,'%s.%s' % (y, kwargs.get('format', 'png')))
-        f = open(tile, 'wb')
-        f.write(t[3])
-        f.close()
+
+        if kwargs.get('decompress_tiles'):
+            data = gzip.decompress(data)
+        with open(tile, 'wb') as fh:
+            fh.write(data)
         done = done + 1
         if not silent:
             logger.info('%s / %s tiles exported' % (done, count))
